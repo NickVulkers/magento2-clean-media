@@ -10,17 +10,14 @@ declare(strict_types=1);
 
 namespace NickVulkers\CleanMedia\Console\Command;
 
-use Magento\Catalog\Model\ResourceModel\Product\Gallery;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\App\ResourceConnection;
+use Symfony\Component\Console\Output\OutputInterface;
+use NickVulkers\CleanMedia\Helper\CatalogMediaHelper;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Command\Command;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem;
 use SplFileInfo;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-use Zend_Db_Select;
 
 /**
  * Class CatalogMedia
@@ -31,33 +28,31 @@ class CatalogMediaUnused extends Command
      * Input key for removing unused images
      */
     const INPUT_KEY_REMOVE_UNUSED = 'remove_unused';
-
     /**
      * Input key for listing unused files
      */
     const INPUT_KEY_LIST_UNUSED = 'list_unused';
-
     /**
      * @var Filesystem
      */
     public Filesystem $filesystem;
-
     /**
-     * @var ResourceConnection
+     * @var CatalogMediaHelper
      */
-    private ResourceConnection $resource;
+    public CatalogMediaHelper $catalogMediaHelper;
 
     /**
-     * @param ResourceConnection $resource
      * @param Filesystem $filesystem
+     * @param CatalogMediaHelper $catalogMediaHelper
      */
     public function __construct(
-        ResourceConnection $resource,
-        Filesystem         $filesystem
+        Filesystem         $filesystem,
+        CatalogMediaHelper $catalogMediaHelper,
     )
     {
-        $this->resource = $resource;
         $this->filesystem = $filesystem;
+        $this->catalogMediaHelper = $catalogMediaHelper;
+
         parent::__construct();
     }
 
@@ -105,7 +100,7 @@ class CatalogMediaUnused extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $productMediaPath = $this->getProductMediaPath();
+        $productMediaPath = $this->catalogMediaHelper->getProductMediaPath();
 
         if (!is_dir($productMediaPath)) {
             $output->writeln(sprintf('Cannot find "%s" folder.', $productMediaPath));
@@ -122,20 +117,13 @@ class CatalogMediaUnused extends Command
 
         $files = [];
         $unusedFiles = 0;
-        $cachedFiles = 0;
         $bytesFreed = 0;
 
-        $mediaGalleryPaths = $this->getMediaGalleryPaths();
+        $mediaGalleryPaths = $this->catalogMediaHelper->getMediaGalleryPaths();
 
         /** @var $info SplFileInfo */
         foreach ($iterator as $info) {
-            $filePath = str_replace($this->getProductMediaPath(), '', $info->getPathname());
-
-            if (str_starts_with($filePath, '/cache/')) {
-                $cachedFiles++;
-
-                continue;
-            }
+            $filePath = str_replace($this->catalogMediaHelper->getProductMediaPath(), '', $info->getPathname());
 
             $files[] = $filePath;
 
@@ -172,34 +160,5 @@ class CatalogMediaUnused extends Command
         }
 
         return Cli::RETURN_SUCCESS;
-    }
-
-    /**
-     * @return array
-     */
-    private function getMediaGalleryPaths(): array
-    {
-        $connection = $this->resource->getConnection();
-        $select = $connection->select()
-            ->from($this->resource->getTableName(Gallery::GALLERY_TABLE))
-            ->reset(Zend_Db_Select::COLUMNS)->columns('value');
-
-        return $connection->fetchCol($select);
-    }
-
-    /**
-     * @return string
-     */
-    private function getMediaPath(): string
-    {
-        return $this->filesystem->getDirectoryRead(DirectoryList::MEDIA)->getAbsolutePath();
-    }
-
-    /**
-     * @return string
-     */
-    private function getProductMediaPath(): string
-    {
-        return $this->getMediaPath() . 'catalog/product';
     }
 }
