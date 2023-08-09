@@ -1,17 +1,17 @@
 <?php
 /**
- * @package     Sivaschenko\Media
- * @author      Sergii Ivashchenko <contact@sivaschenko.com>
- * @copyright   2017-2018, Sergii Ivashchenko
+ * @package     NickVulkers\Media
+ * @author      Sergii Ivashchenko <contact@sivaschenko.com>, <contact@nickvulkers.com>
+ * @copyright   2017-2018 Sergii Ivashchenko, 2023 Nick Vulkers
  * @license     MIT
  */
+
 declare(strict_types=1);
 
-namespace Sivaschenko\CleanMedia\Command;
+namespace NickVulkers\CleanMedia\Command;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Console\Cli;
-use Magento\Framework\DB\Select;
 use Magento\Framework\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,6 +19,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Catalog\Model\ResourceModel\Product\Gallery;
 use Symfony\Component\Console\Input\InputOption;
+use Zend_Db_Select;
 
 /**
  * Class CatalogMedia
@@ -58,12 +59,12 @@ class CatalogMedia extends Command
     /**
      * @var Filesystem
      */
-    public $filesystem;
+    public Filesystem $filesystem;
 
     /**
      * @var ResourceConnection
      */
-    private $resource;
+    private ResourceConnection $resource;
 
     /**
      * @param ResourceConnection $resource
@@ -71,8 +72,9 @@ class CatalogMedia extends Command
      */
     public function __construct(
         ResourceConnection $resource,
-        Filesystem $filesystem
-    ) {
+        Filesystem         $filesystem
+    )
+    {
         $this->resource = $resource;
         $this->filesystem = $filesystem;
         parent::__construct();
@@ -81,9 +83,9 @@ class CatalogMedia extends Command
     /**
      * @inheritdoc
      */
-    protected function configure()
+    protected function configure(): void
     {
-        $this->setName('sivaschenko:catalog:media')
+        $this->setName('nickvulkers:catalog:media')
             ->setDescription('Get information about catalog product media')
             ->addOption(
                 self::INPUT_KEY_REMOVE_UNUSED,
@@ -122,9 +124,10 @@ class CatalogMedia extends Command
     /**
      * @inheritdoc
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $productMediaPath = $this->getProductMediaPath();
+
         if (!is_dir($productMediaPath)) {
             $output->writeln(sprintf('Cannot find "%s" folder.', $productMediaPath));
             $output->writeln('It appears there are no product images to analyze.');
@@ -155,31 +158,40 @@ class CatalogMedia extends Command
         /** @var $info \SplFileInfo */
         foreach ($iterator as $info) {
             $filePath = str_replace($this->getProductMediaPath(), '', $info->getPathname());
-            if (strpos($filePath, '/cache/') === 0) {
+
+            if (str_starts_with($filePath, '/cache/')) {
                 $cachedFiles++;
+
                 continue;
             }
+
             $files[] = $filePath;
 
             if (!in_array($filePath, $mediaGalleryPaths)) {
                 $unusedFiles++;
+
                 if ($input->getOption(self::INPUT_KEY_LIST_UNUSED)) {
                     $output->writeln('Unused file: ' . $filePath);
                 }
+
                 if ($input->getOption(self::INPUT_KEY_REMOVE_UNUSED)) {
                     $bytesFreed += filesize($info->getPathname());
                     $removedUnusedFiles += unlink($info->getPathname());
                     $output->writeln(sprintf('Unused "%s" was removed', $filePath));
+
                     continue;
                 }
             }
 
             $hash = md5_file($info->getPathname());
+
             if (isset($hashes[$hash])) {
                 $duplicatedFiles++;
+
                 if ($input->getOption(self::INPUT_KEY_LIST_DUPES)) {
                     $output->writeln(sprintf('Duplicate "%s" to "%s"', $filePath, $hashes[$hash]));
                 }
+
                 if ($input->getOption(self::INPUT_KEY_REMOVE_DUPES)) {
                     $bytesFreed += filesize($info->getPathname());
                     $removedDuplicateFiles += unlink($info->getPathname());
@@ -214,32 +226,37 @@ class CatalogMedia extends Command
         $output->writeln(sprintf('Missing files: %s.', count($missingFiles)));
         $output->writeln(sprintf('Duplicated files: %s.', $duplicatedFiles));
         $output->writeln('');
+
         if ($input->getOption(self::INPUT_KEY_REMOVE_UNUSED)) {
             $output->writeln(sprintf('Removed unused files: %s.', $removedUnusedFiles));
         }
+
         if ($input->getOption(self::INPUT_KEY_REMOVE_ORPHANED_ROWS)) {
             $output->writeln(sprintf('Removed orphaned rows: %s.', $removedRows));
         }
+
         if ($input->getOption(self::INPUT_KEY_REMOVE_DUPES)) {
             $output->writeln(sprintf('Removed duplicated files: %s.', $duplicatedFiles));
             $output->writeln(sprintf('Updated catalog_product_entity_varchar rows: %s', $updatedVarcharRows));
             $output->writeln(sprintf('Updated catalog_product_entity_media_gallery rows: %s', $updatedGalleryRows));
         }
+
         if ($input->getOption(self::INPUT_KEY_REMOVE_UNUSED) || $input->getOption(self::INPUT_KEY_REMOVE_DUPES)) {
             $output->writeln(sprintf('Disk space freed: %s Mb', round($bytesFreed / 1024 / 1024)));
         }
+
         return Cli::RETURN_SUCCESS;
     }
 
     /**
      * @return array
      */
-    private function getMediaGalleryPaths()
+    private function getMediaGalleryPaths(): array
     {
         $connection = $this->resource->getConnection();
         $select = $connection->select()
             ->from($this->resource->getTableName(Gallery::GALLERY_TABLE))
-            ->reset(Select::COLUMNS)->columns('value');
+            ->reset(Zend_Db_Select::COLUMNS)->columns('value');
 
         return $connection->fetchCol($select);
     }
@@ -268,16 +285,19 @@ class CatalogMedia extends Command
     private function updateDatabaseForRemovedDuplicates(string $originalPath, string $duplicatePath): array
     {
         $connection = $this->resource->getConnection();
+
         $resultVarchar = $connection->update(
             $this->resource->getTableName('catalog_product_entity_varchar'),
             ['value' => $originalPath],
             $connection->quoteInto('value = ?', $duplicatePath)
         );
+
         $resultGallery = $connection->update(
             $this->resource->getTableName('catalog_product_entity_media_gallery'),
             ['value' => $originalPath],
             $connection->quoteInto('value = ?', $duplicatePath)
         );
+
         return [$resultVarchar, $resultGallery];
     }
 }

@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <!--
 /**
- * @package     Sivaschenko\Media
- * @author      Sergii Ivashchenko <contact@sivaschenko.com>
- * @copyright   2017-2018, Sergii Ivashchenko
+ * @package     NickVulkers\Media
+ * @author      Sergii Ivashchenko <contact@sivaschenko.com>, <contact@nickvulkers.com>
+ * @copyright   2017-2018 Sergii Ivashchenko, 2023 Nick Vulkers
  * @license     MIT
  */
  -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="Sivaschenko_CleanMedia" setup_version="1.0.0">
+    <module name="NickVulkers_CleanMedia" setup_version="1.0.0">
         <sequence>
             <module name="Magento_Catalog"/>
         </sequence>

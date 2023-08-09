@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <!--
 /**
- * @package     Sivaschenko\Media
- * @author      Sergii Ivashchenko <contact@sivaschenko.com>
- * @copyright   2017-2018, Sergii Ivashchenko
+ * @package     NickVulkers\Media
+ * @author      Sergii Ivashchenko <contact@sivaschenko.com>, <contact@nickvulkers.com>
+ * @copyright   2017-2018 Sergii Ivashchenko, 2023 Nick Vulkers
  * @license     MIT
  */
  -->
@@ -11,7 +11,7 @@
     <type name="Magento\Framework\Console\CommandListInterface">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="analyzeCleanMediaCommand" xsi:type="object">Sivaschenko\CleanMedia\Command\CatalogMedia</item>
+                <item name="analyzeCleanMediaCommand" xsi:type="object">NickVulkers\CleanMedia\Command\CatalogMedia</item>
             </argument>
         </arguments>
     </type>

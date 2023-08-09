@@ -1,5 +1,5 @@
 {
-  "name": "sivaschenko/magento2-clean-media",
+  "name": "nickvulkers/magento2-clean-media",
   "description": "Magento 2 media analysis and cleanup",
   "type": "magento2-module",
   "version": "1.1.1",
@@ -8,6 +8,10 @@
     {
       "name": "Sergii Ivashchenko",
       "homepage": "http://www.sivaschenko.com/"
+    },
+    {
+      "name": "Nick Vulkers",
+      "homepage": "https://nickvulkers.com"
     }
   ],
   "repositories": [
@@ -27,7 +31,7 @@
       "registration.php"
     ],
     "psr-4": {
-      "Sivaschenko\\CleanMedia\\": ""
+      "NickVulkers\\CleanMedia\\": ""
     }
   }
 }
