@@ -8,17 +8,18 @@
 
 declare(strict_types=1);
 
-namespace NickVulkers\CleanMedia\Command;
+namespace NickVulkers\CleanMedia\Console\Command;
 
+use Magento\Catalog\Model\ResourceModel\Product\Gallery;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Filesystem;
+use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Magento\Framework\App\ResourceConnection;
-use Magento\Catalog\Model\ResourceModel\Product\Gallery;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 use Zend_Db_Select;
 
 /**
@@ -118,6 +119,13 @@ class CatalogMedia extends Command
                 InputOption::VALUE_NONE,
                 'List duplicated files'
             );
+
+            $this->setHelp(
+                <<<HELP
+                This command shows information about catalog product media.
+                HELP
+            );
+
         parent::configure();
     }
 
@@ -155,7 +163,7 @@ class CatalogMedia extends Command
 
         $mediaGalleryPaths = $this->getMediaGalleryPaths();
 
-        /** @var $info \SplFileInfo */
+        /** @var $info SplFileInfo */
         foreach ($iterator as $info) {
             $filePath = str_replace($this->getProductMediaPath(), '', $info->getPathname());
 
@@ -219,6 +227,7 @@ class CatalogMedia extends Command
         }
 
         $output->writeln('');
+        $output->writeln('CatalogMedia');
         $output->writeln(sprintf('Media Gallery entries: %s.', count($mediaGalleryPaths)));
         $output->writeln(sprintf('Files in directory: %s.', count($files)));
         $output->writeln(sprintf('Cached images: %s.', $cachedFiles));

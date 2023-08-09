@@ -11,7 +11,8 @@
     <type name="Magento\Framework\Console\CommandListInterface">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="analyzeCleanMediaCommand" xsi:type="object">NickVulkers\CleanMedia\Command\CatalogMedia</item>
+                <item name="analyzeCleanMediaCommand" xsi:type="object">NickVulkers\CleanMedia\Console\Command\CatalogMedia</item>
+                <item name="analyzeUnusedMediaCommand" xsi:type="object">NickVulkers\CleanMedia\Console\Command\CatalogMediaUnused</item>
             </argument>
         </arguments>
     </type>
