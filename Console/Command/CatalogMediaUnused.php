@@ -117,6 +117,7 @@ class CatalogMediaUnused extends Command
 
         $files = [];
         $unusedFiles = 0;
+        $removedUnusedFiles = 0;
         $bytesFreed = 0;
 
         $mediaGalleryPaths = $this->catalogMediaHelper->getMediaGalleryPaths();
@@ -136,6 +137,7 @@ class CatalogMediaUnused extends Command
 
                 if ($input->getOption(self::INPUT_KEY_REMOVE_UNUSED)) {
                     $bytesFreed += filesize($info->getPathname());
+                    $removedUnusedFiles += unlink($info->getPathname());
                     $output->writeln(sprintf('Unused "%s" was removed', $filePath));
                 }
             }
@@ -149,7 +151,7 @@ class CatalogMediaUnused extends Command
         if (!$input->getOption(self::INPUT_KEY_REMOVE_UNUSED)) {
             $output->writeln(sprintf('Unused files: %s.', $unusedFiles));
         } else {
-            $output->writeln(sprintf('Removed unused files: %s.', $unusedFiles));
+            $output->writeln(sprintf('Removed unused files: %s.', $removedUnusedFiles));
         }
 
         $output->writeln('');
